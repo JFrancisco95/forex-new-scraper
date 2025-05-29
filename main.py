@@ -1,8 +1,9 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from bs4 import BeautifulSoup
+from selenium.webdriver.common.by import By
 import time
+from bs4 import BeautifulSoup
 
 CHROMEDRIVER_PATH = "/usr/bin/chromedriver"
 CHROME_BINARY_PATH = "/usr/bin/chromium"
@@ -13,14 +14,27 @@ def create_driver():
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--window-size=1920x1080")
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0 Safari/537.36")
     options.binary_location = CHROME_BINARY_PATH
     service = Service(CHROMEDRIVER_PATH)
-    return webdriver.Chrome(service=service, options=options)
+    driver = webdriver.Chrome(service=service, options=options)
+    return driver
 
 def fetch_high_impact_news():
     driver = create_driver()
     driver.get("https://www.forexfactory.com/calendar")
-    time.sleep(5)  # wait for JS to load
+
+    # Wait longer for JS content to load
+    time.sleep(10)
+
+    # Scroll down to bottom to trigger lazy load if any
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    time.sleep(2)  # give it a moment after scroll
+
+    # Save HTML to file for debugging
+    with open("page.html", "w", encoding="utf-8") as f:
+        f.write(driver.page_source)
+
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     driver.quit()
 
