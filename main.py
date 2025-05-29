@@ -6,12 +6,12 @@ from bs4 import BeautifulSoup
 
 def create_driver():
     options = uc.ChromeOptions()
-    options.add_argument("--headless=new")  # latest headless mode
+    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--window-size=1920,1080")
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0 Safari/537.36")
-    driver = uc.Chrome(options=options)
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0 Safari/537.36")
+    driver = uc.Chrome(version_main=136, options=options)  # force driver for Chrome 136
     return driver
 
 def fetch_high_impact_news():
