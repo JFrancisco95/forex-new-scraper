@@ -14,12 +14,22 @@ def create_driver():
     driver = uc.Chrome(version_main=136, options=options)  # force driver for Chrome 136
     return driver
 
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 def fetch_high_impact_news():
     driver = create_driver()
     driver.get("https://www.forexfactory.com/calendar")
 
     try:
-        # Wait up to 15 seconds for the calendar table to appear
+        # Wait for iframe to appear (usually iframe with id or class)
+        iframe = WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "iframe#iframe_calendar, iframe[src*='calendar']"))
+        )
+        driver.switch_to.frame(iframe)
+
+        # Now wait for calendar table inside iframe
         WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.ID, "calendar__table"))
         )
@@ -29,6 +39,9 @@ def fetch_high_impact_news():
 
     soup = BeautifulSoup(driver.page_source, "html.parser")
     driver.quit()
+
+    # rest of your parsing code here...
+
 
     table = soup.find("table", {"id": "calendar__table"})
     if not table:
