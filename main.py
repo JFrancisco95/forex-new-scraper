@@ -46,3 +46,5 @@ def fetch_high_impact_news():
 
 if __name__ == "__main__":
     print("=== High-Impact Forex Events ===")
+    news = fetch_high_impact_news()
+    print(news)
