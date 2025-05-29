@@ -1,0 +1,9 @@
+# High-Impact Forex News Scraper
+
+Scrapes high-impact events from Forex Factory using Selenium + Chromium and prints to CLI.
+
+## Run Locally
+
+```bash
+pip install -r requirements.txt
+python main.py
