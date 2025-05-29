@@ -1,35 +1,50 @@
-import undetected_chromedriver as uc
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
+import time
+
+CHROMEDRIVER_PATH = "/usr/bin/chromedriver"
+CHROME_BINARY_PATH = "/usr/bin/chromium"
 
 def create_driver():
-    options = uc.ChromeOptions()
-    options.add_argument("--headless=new")
+    options = Options()
+    options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--window-size=1920,1080")
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0 Safari/537.36")
-    driver = uc.Chrome(version_main=136, options=options)  # force driver for Chrome 136
-    return driver
-
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+    options.add_argument("--window-size=1920x1080")
+    options.binary_location = CHROME_BINARY_PATH
+    service = Service(CHROMEDRIVER_PATH)
+    return webdriver.Chrome(service=service, options=options)
 
 def fetch_high_impact_news():
     driver = create_driver()
     driver.get("https://www.forexfactory.com/calendar")
 
-    try:
-        # Wait for iframe to appear (usually iframe with id or class)
-        iframe = WebDriverWait(driver, 15).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "iframe#iframe_calendar, iframe[src*='calendar']"))
-        )
-        driver.switch_to.frame(iframe)
+    # DEBUG: List all iframes on page and their src attributes
+    iframes = driver.find_elements(By.TAG_NAME, "iframe")
+    print(f"Found {len(iframes)} iframes on the page.")
+    for i, frame in enumerate(iframes):
+        print(f"Iframe {i} src: {frame.get_attribute('src')}")
 
-        # Now wait for calendar table inside iframe
+    # Find the iframe containing "calendar" in its src
+    calendar_iframe = None
+    for frame in iframes:
+        src = frame.get_attribute("src") or ""
+        if "calendar" in src:
+            calendar_iframe = frame
+            break
+
+    if not calendar_iframe:
+        driver.quit()
+        return "Could not find calendar iframe."
+
+    driver.switch_to.frame(calendar_iframe)
+
+    try:
         WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.ID, "calendar__table"))
         )
@@ -40,21 +55,18 @@ def fetch_high_impact_news():
     soup = BeautifulSoup(driver.page_source, "html.parser")
     driver.quit()
 
-    # rest of your parsing code here...
-
-
     table = soup.find("table", {"id": "calendar__table"})
     if not table:
-        return "Could not find calendar table."
+        return "Could not find calendar table after iframe switch."
 
     rows = table.find_all("tr", class_="calendar__row")
     output = []
 
     for row in rows:
-        impact_td = row.find("td", class_="calendar__impact")
-        if not impact_td:
+        impact = row.find("td", class_="calendar__impact")
+        if not impact:
             continue
-        impact_span = impact_td.find("span")
+        impact_span = impact.find("span")
         if impact_span and "High" in impact_span.get("title", ""):
             date = row.find("td", class_="calendar__time").text.strip()
             currency = row.find("td", class_="calendar__currency").text.strip()
