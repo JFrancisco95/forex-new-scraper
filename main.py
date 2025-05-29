@@ -45,4 +45,4 @@ def fetch_high_impact_news():
     return "\n".join(output) or "No high-impact events found."
 
 if __name__ == "__main__":
-    print("=== High-Impact Forex Events ===
+    print("=== High-Impact Forex Events ===")
