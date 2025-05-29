@@ -5,7 +5,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
-import time
 
 CHROMEDRIVER_PATH = "/usr/bin/chromedriver"
 CHROME_BINARY_PATH = "/usr/bin/chromium"
@@ -24,28 +23,8 @@ def fetch_high_impact_news():
     driver = create_driver()
     driver.get("https://www.forexfactory.com/calendar")
 
-    # DEBUG: List all iframes on page and their src attributes
-    iframes = driver.find_elements(By.TAG_NAME, "iframe")
-    print(f"Found {len(iframes)} iframes on the page.")
-    for i, frame in enumerate(iframes):
-        print(f"Iframe {i} src: {frame.get_attribute('src')}")
-
-    # Find the iframe containing "calendar" in its src
-    calendar_iframe = None
-    for frame in iframes:
-        src = frame.get_attribute("src") or ""
-        if "calendar" in src:
-            calendar_iframe = frame
-            break
-
-    if not calendar_iframe:
-        driver.quit()
-        return "Could not find calendar iframe."
-
-    driver.switch_to.frame(calendar_iframe)
-
     try:
-        WebDriverWait(driver, 15).until(
+        WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.ID, "calendar__table"))
         )
     except Exception as e:
@@ -57,7 +36,7 @@ def fetch_high_impact_news():
 
     table = soup.find("table", {"id": "calendar__table"})
     if not table:
-        return "Could not find calendar table after iframe switch."
+        return "Could not find calendar table."
 
     rows = table.find_all("tr", class_="calendar__row")
     output = []
